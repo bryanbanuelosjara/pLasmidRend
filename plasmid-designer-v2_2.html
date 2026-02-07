@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plasmid Map Designer - Publication Quality</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 0;
+            min-height: 700px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            padding: 25px;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+            max-height: 800px;
+        }
+
+        .canvas-area {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #ffffff;
+        }
+
+        .upload-section {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .upload-box {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .upload-box:hover {
+            border-color: #764ba2;
+            background: #f8f9ff;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-add {
+            background: #10b981;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 20px 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .plasmid-info {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .feature-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .feature-item {
+            background: white;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border-left: 4px solid;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .feature-item:hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .feature-item.selected {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transform: scale(1.02);
+        }
+
+        .feature-item.hidden {
+            opacity: 0.5;
+        }
+
+        .feature-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .feature-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: #2d3748;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .feature-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .feature-type {
+            font-size: 11px;
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: #4a5568;
+        }
+
+        .feature-position {
+            font-size: 11px;
+            color: #718096;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            transition: transform 0.2s;
+        }
+
+        .btn-icon:hover {
+            transform: scale(1.2);
+        }
+
+        .btn-delete {
+            color: #ef4444;
+        }
+
+        .controls {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .control-group {
+            margin: 12px 0;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 6px;
+        }
+
+        .control-group input,
+        .control-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .color-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .color-group input[type="color"] {
+            width: 60px;
+            height: 40px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .color-group input[type="text"] {
+            flex: 1;
+            text-transform: uppercase;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 400;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .radio-group input[type="radio"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        canvas {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .export-section {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .zoom-controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .zoom-controls span {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #2d3748;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .plasmid-tab {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .plasmid-tab:hover {
+            border-color: #667eea;
+            transform: translateX(2px);
+        }
+
+        .plasmid-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .plasmid-tab-name {
+            font-weight: 600;
+            font-size: 13px;
+            flex: 1;
+        }
+
+        .plasmid-tab-info {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-right: 10px;
+        }
+
+        .plasmid-tab.active .plasmid-tab-info {
+            opacity: 0.9;
+        }
+
+        .plasmid-tab-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 2px 6px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .plasmid-tab-close:hover {
+            opacity: 1;
+        }
+
+        .plasmid-tab.active .plasmid-tab-close {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧬 Plasmid Map Designer</h1>
+            <p>Create publication-quality plasmid maps with custom annotations</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="upload-section">
+                    <h3 class="section-title">📁 Upload File</h3>
+                    <div class="upload-box" id="uploadBox">
+                        <p style="margin-bottom: 10px;">📎 Drop GenBank or FASTA file here</p>
+                        <p style="font-size: 12px; color: #718096;">or click to browse</p>
+                        <input type="file" id="fileInput" class="file-input" accept=".gb,.gbk,.genbank,.fasta,.fa,.fna" multiple>
+                    </div>
+                    <button class="btn" style="width: 100%; margin-top: 10px;" onclick="document.getElementById('fileInput').click()">
+                        Choose File(s)
+                    </button>
+                </div>
+
+                <div id="plasmidTabsSection" style="display: none;">
+                    <h3 class="section-title">🧬 Plasmids</h3>
+                    <div id="plasmidTabs" style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px;"></div>
+                </div>
+
+                <div id="plasmidInfoSection" style="display: none;">
+                    <h3 class="section-title">ℹ️ Plasmid Info</h3>
+                    <div class="plasmid-info">
+                        <div style="margin-bottom: 10px;">
+                            <strong>Name:</strong>
+                            <input type="text" id="plasmidName" style="width: 100%; margin-top: 5px; padding: 6px; border: 1px solid #cbd5e0; border-radius: 4px;" onchange="updatePlasmidName()">
+                        </div>
+                        <div id="plasmidStats"></div>
+                    </div>
+                </div>
+
+                <div id="featuresSection" style="display: none;">
+                    <h3 class="section-title">🎨 Features</h3>
+                    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                        <button class="btn btn-add" style="flex: 1;" onclick="openAddFeatureModal()">+ Add Annotation</button>
+                        <button class="btn" style="flex: 1; background: #10b981; padding: 8px;" onclick="copyAllSettingsToOtherPlasmids()" title="Copy all feature settings to matching features in other plasmids">📋 Copy All to Others</button>
+                    </div>
+                    <div class="feature-list" id="featureList"></div>
+                </div>
+
+                <div id="editSection" style="display: none;">
+                    <h3 class="section-title">✏️ Edit Feature</h3>
+                    <div class="controls">
+                        <div class="control-group">
+                            <label>Label</label>
+                            <input type="text" id="featureLabel" placeholder="Feature name">
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Fill Color</label>
+                            <div class="color-group">
+                                <input type="color" id="featureFillColor">
+                                <input type="text" id="featureFillHex" placeholder="#3B82F6" maxlength="7">
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Outline Color</label>
+                            <div class="color-group">
+                                <input type="color" id="featureOutlineColor">
+                                <input type="text" id="featureOutlineHex" placeholder="#2563EB" maxlength="7">
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Type</label>
+                            <select id="featureType">
+                                <option value="promoter">Promoter</option>
+                                <option value="cds">CDS/Gene</option>
+                                <option value="terminator">Terminator</option>
+                                <option value="ori">Origin of Replication</option>
+                                <option value="primer">Primer Binding Site</option>
+                                <option value="misc">Misc Feature</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Start Position</label>
+                            <input type="number" id="featureStart" min="1">
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>End Position</label>
+                            <input type="number" id="featureEnd" min="1">
+                        </div>
+                        
+                        <div class="control-group checkbox-group">
+                            <input type="checkbox" id="featureReverse">
+                            <label style="margin: 0;">Reverse Strand (-)</label>
+                        </div>
+                        
+                        <div class="control-group checkbox-group">
+                            <input type="checkbox" id="featureShowLabel" checked>
+                            <label style="margin: 0;">Show Label</label>
+                        </div>
+                        
+                        <div class="control-group checkbox-group">
+                            <input type="checkbox" id="featureShowArrow" checked>
+                            <label style="margin: 0;">Show Arrow</label>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Label Position</label>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="editLabelPos" value="outside" checked> Outside
+                                </label>
+                                <label>
+                                    <input type="radio" name="editLabelPos" value="inside"> Inside
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Font Size</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="editFontSize" value="10"> 10px</label>
+                                <label><input type="radio" name="editFontSize" value="12" checked> 12px</label>
+                                <label><input type="radio" name="editFontSize" value="14"> 14px</label>
+                                <label><input type="radio" name="editFontSize" value="16"> 16px</label>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group checkbox-group">
+                            <input type="checkbox" id="featureFontBold" checked>
+                            <label style="margin: 0;">Bold Font</label>
+                        </div>
+                        
+                        <button class="btn" style="width: 100%;" onclick="applyFeatureEdit()">Apply Changes</button>
+                        <button class="btn" style="width: 100%; margin-top: 10px; background: #10b981;" onclick="copySettingsToOtherPlasmids()">📋 Copy to Same Feature in Other Plasmids</button>
+                        <button class="btn btn-secondary" style="width: 100%; margin-top: 10px;" onclick="deleteSelectedFeature()">🗑️ Delete Feature</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h3 class="section-title">⚙️ Global Settings (All Plasmids)</h3>
+                    <div class="controls">
+                        <div class="control-group checkbox-group">
+                            <input type="checkbox" id="globalShowScale" checked onchange="applyGlobalSettings()">
+                            <label style="margin: 0;">Show Scale Markers</label>
+                        </div>
+                        <div class="control-group checkbox-group">
+                            <input type="checkbox" id="globalShowPositions" checked onchange="applyGlobalSettings()">
+                            <label style="margin: 0;">Show Position Numbers</label>
+                        </div>
+                        <div class="control-group">
+                            <label>Ring Thickness</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="globalRingWidth" value="25" onchange="applyGlobalSettings()"> Thin</label>
+                                <label><input type="radio" name="globalRingWidth" value="40" onchange="applyGlobalSettings()"> Medium</label>
+                                <label><input type="radio" name="globalRingWidth" value="55" checked onchange="applyGlobalSettings()"> Thick</label>
+                                <label><input type="radio" name="globalRingWidth" value="70" onchange="applyGlobalSettings()"> XL</label>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>Zoom Level</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="globalZoom" value="0.6" onchange="applyGlobalSettings()"> 60%</label>
+                                <label><input type="radio" name="globalZoom" value="0.8" onchange="applyGlobalSettings()"> 80%</label>
+                                <label><input type="radio" name="globalZoom" value="1" checked onchange="applyGlobalSettings()"> 100%</label>
+                                <label><input type="radio" name="globalZoom" value="1.2" onchange="applyGlobalSettings()"> 120%</label>
+                                <label><input type="radio" name="globalZoom" value="1.5" onchange="applyGlobalSettings()"> 150%</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h3 class="section-title">🎨 Current Plasmid Settings</h3>
+                    <div class="controls">
+                        <div class="control-group checkbox-group">
+                            <input type="checkbox" id="showScale" checked onchange="render()">
+                            <label style="margin: 0;">Show Scale Markers</label>
+                        </div>
+                        <div class="control-group checkbox-group">
+                            <input type="checkbox" id="showPositions" checked onchange="render()">
+                            <label style="margin: 0;">Show Position Numbers</label>
+                        </div>
+                        <div class="control-group">
+                            <label>Ring Thickness</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="ringWidth" value="25" onchange="render()"> Thin</label>
+                                <label><input type="radio" name="ringWidth" value="40" onchange="render()"> Medium</label>
+                                <label><input type="radio" name="ringWidth" value="55" checked onchange="render()"> Thick</label>
+                                <label><input type="radio" name="ringWidth" value="70" onchange="render()"> XL</label>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>Zoom Level</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="zoom" value="0.6" onchange="render()"> 60%</label>
+                                <label><input type="radio" name="zoom" value="0.8" onchange="render()"> 80%</label>
+                                <label><input type="radio" name="zoom" value="1" checked onchange="render()"> 100%</label>
+                                <label><input type="radio" name="zoom" value="1.2" onchange="render()"> 120%</label>
+                                <label><input type="radio" name="zoom" value="1.5" onchange="render()"> 150%</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-area">
+                <canvas id="plasmidCanvas" width="700" height="700"></canvas>
+                
+                <div class="export-section">
+                    <button class="btn" onclick="exportPNG()">📥 Download PNG</button>
+                    <button class="btn" onclick="exportSVG()">📥 Download SVG</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Feature Modal -->
+    <div id="addFeatureModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Add New Annotation</div>
+            <div class="controls">
+                <div class="control-group">
+                    <label>Label</label>
+                    <input type="text" id="newLabel" placeholder="Feature name">
+                </div>
+                <div class="control-group">
+                    <label>Type</label>
+                    <select id="newType" onchange="updateNewFeatureColors()">
+                        <option value="promoter">Promoter</option>
+                        <option value="cds">CDS/Gene</option>
+                        <option value="terminator">Terminator</option>
+                        <option value="ori">Origin of Replication</option>
+                        <option value="primer">Primer Binding Site</option>
+                        <option value="misc">Misc Feature</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Start Position (bp)</label>
+                    <input type="number" id="newStart" min="1" placeholder="e.g., 1">
+                </div>
+                <div class="control-group">
+                    <label>End Position (bp)</label>
+                    <input type="number" id="newEnd" min="1" placeholder="e.g., 500">
+                </div>
+                <div class="control-group">
+                    <label>Fill Color</label>
+                    <div class="color-group">
+                        <input type="color" id="newFillColor" value="#3b82f6">
+                        <input type="text" id="newFillHex" placeholder="#3B82F6" value="#3B82F6" maxlength="7">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Outline Color</label>
+                    <div class="color-group">
+                        <input type="color" id="newOutlineColor" value="#2563eb">
+                        <input type="text" id="newOutlineHex" placeholder="#2563EB" value="#2563EB" maxlength="7">
+                    </div>
+                </div>
+                <div class="control-group checkbox-group">
+                    <input type="checkbox" id="newReverse">
+                    <label style="margin: 0;">Reverse Strand (-)</label>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeAddFeatureModal()">Cancel</button>
+                <button class="btn" onclick="addNewFeature()">Add Feature</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state - now supports multiple plasmids
+        let plasmids = []; // Array of plasmid objects
+        let currentPlasmidIndex = null; // Currently selected plasmid
+        let selectedFeatureIndex = null;
+
+        const canvas = document.getElementById('plasmidCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Type-based default colors (fill and outline now match)
+        const TYPE_COLORS = {
+            promoter: { fill: '#22c55e', outline: '#22c55e' },
+            cds: { fill: '#3b82f6', outline: '#3b82f6' },
+            gene: { fill: '#3b82f6', outline: '#3b82f6' },
+            terminator: { fill: '#ef4444', outline: '#ef4444' },
+            ori: { fill: '#64748b', outline: '#64748b' },
+            primer: { fill: '#8b5cf6', outline: '#8b5cf6' },
+            misc: { fill: '#6b7280', outline: '#6b7280' }
+        };
+
+        // File upload handling
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadBox.addEventListener('click', () => fileInput.click());
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.style.borderColor = '#764ba2';
+        });
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.style.borderColor = '#667eea';
+        });
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.style.borderColor = '#667eea';
+            if (e.dataTransfer.files.length > 0) {
+                handleFiles(Array.from(e.dataTransfer.files));
+            }
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFiles(Array.from(e.target.files));
+            }
+        });
+
+        function handleFiles(files) {
+            files.forEach(file => handleFile(file));
+        }
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target.result;
+                const fileName = file.name.toLowerCase();
+                
+                if (fileName.endsWith('.fasta') || fileName.endsWith('.fa') || fileName.endsWith('.fna')) {
+                    parseFASTA(content, file.name);
+                } else {
+                    parseGenBank(content);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseGenBank(content) {
+            const lines = content.split('\n');
+            const features = [];
+            let plasmidName = 'Plasmid';
+            let plasmidLength = 0;
+            let inFeatures = false;
+            let currentFeature = null;
+
+            for (let line of lines) {
+                if (line.startsWith('LOCUS')) {
+                    const parts = line.trim().split(/\s+/);
+                    plasmidName = parts[1] || plasmidName;
+                    plasmidLength = parseInt(parts[2]) || 0;
+                }
+                
+                if (line.startsWith('FEATURES')) {
+                    inFeatures = true;
+                    continue;
+                }
+                
+                if (line.startsWith('ORIGIN') || line.startsWith('//')) {
+                    inFeatures = false;
+                    if (currentFeature) {
+                        features.push(currentFeature);
+                        currentFeature = null;
+                    }
+                }
+
+                if (inFeatures) {
+                    const featureMatch = line.match(/^\s{5}(\w+)\s+(.+)/);
+                    if (featureMatch) {
+                        if (currentFeature) features.push(currentFeature);
+                        
+                        const type = featureMatch[1].toLowerCase();
+                        const location = featureMatch[2];
+                        
+                        let start = 0, end = 0, reverse = false;
+                        if (location.includes('complement')) {
+                            reverse = true;
+                            const match = location.match(/(\d+)\.\.(\d+)/);
+                            if (match) {
+                                start = parseInt(match[1]);
+                                end = parseInt(match[2]);
+                            }
+                        } else {
+                            const match = location.match(/(\d+)\.\.(\d+)/);
+                            if (match) {
+                                start = parseInt(match[1]);
+                                end = parseInt(match[2]);
+                            }
+                        }
+
+                        const colors = TYPE_COLORS[type] || TYPE_COLORS.misc;
+                        currentFeature = {
+                            type: type,
+                            start: start,
+                            end: end,
+                            reverse: reverse,
+                            label: '',
+                            fillColor: colors.fill,
+                            outlineColor: colors.outline,
+                            showLabel: true,
+                            showArrow: true,
+                            labelPosition: 'outside',
+                            fontSize: 12,
+                            fontBold: true,
+                            visible: true
+                        };
+                    } else if (currentFeature) {
+                        if (line.includes('/label=')) {
+                            const match = line.match(/\/label="?([^"]+)"?/);
+                            if (match) currentFeature.label = match[1].replace(/"/g, '').trim();
+                        } else if (line.includes('/gene=')) {
+                            const match = line.match(/\/gene="?([^"]+)"?/);
+                            if (match && !currentFeature.label) {
+                                currentFeature.label = match[1].replace(/"/g, '').trim();
+                            }
+                        }
+                    }
+                }
+            }
+
+            plasmids.push({
+                name: plasmidName,
+                length: plasmidLength,
+                features: features.filter(f => f.start > 0 && f.end > 0)
+            });
+
+            currentPlasmidIndex = plasmids.length - 1;
+            initializeUI();
+        }
+
+        function parseFASTA(content, fileName) {
+            const lines = content.split('\n');
+            let sequence = '';
+            let plasmidName = fileName.replace(/\.(fasta|fa|fna)$/i, '');
+
+            for (let line of lines) {
+                if (line.startsWith('>')) {
+                    const match = line.match(/^>(.+)/);
+                    if (match) plasmidName = match[1].trim();
+                } else {
+                    sequence += line.trim();
+                }
+            }
+
+            plasmids.push({
+                name: plasmidName,
+                length: sequence.length,
+                features: []
+            });
+
+            currentPlasmidIndex = plasmids.length - 1;
+            initializeUI();
+        }
+
+        function initializeUI() {
+            const plasmidData = plasmids[currentPlasmidIndex];
+            
+            document.getElementById('plasmidName').value = plasmidData.name;
+            document.getElementById('plasmidStats').innerHTML = `
+                <div><strong>Length:</strong> ${plasmidData.length.toLocaleString()} bp</div>
+                <div><strong>Features:</strong> ${plasmidData.features.length}</div>
+            `;
+            
+            document.getElementById('plasmidInfoSection').style.display = 'block';
+            document.getElementById('featuresSection').style.display = 'block';
+            
+            renderPlasmidTabs();
+            renderFeatureList();
+            render();
+        }
+
+        function renderPlasmidTabs() {
+            const tabsDiv = document.getElementById('plasmidTabs');
+            tabsDiv.innerHTML = '';
+            
+            plasmids.forEach((plasmid, index) => {
+                const tab = document.createElement('div');
+                tab.className = `plasmid-tab ${index === currentPlasmidIndex ? 'active' : ''}`;
+                tab.innerHTML = `
+                    <div class="plasmid-tab-name" onclick="switchPlasmid(${index})">${plasmid.name}</div>
+                    <div class="plasmid-tab-info">${plasmid.length.toLocaleString()} bp | ${plasmid.features.length} features</div>
+                    <button class="plasmid-tab-close" onclick="closePlasmid(${index}, event)" title="Close">×</button>
+                `;
+                tabsDiv.appendChild(tab);
+            });
+            
+            document.getElementById('plasmidTabsSection').style.display = plasmids.length > 0 ? 'block' : 'none';
+        }
+
+        function switchPlasmid(index) {
+            if (index === currentPlasmidIndex) return;
+            
+            currentPlasmidIndex = index;
+            selectedFeatureIndex = null;
+            document.getElementById('editSection').style.display = 'none';
+            
+            initializeUI();
+            syncGlobalSettings();
+        }
+
+        function closePlasmid(index, event) {
+            if (event) event.stopPropagation();
+            
+            if (!confirm(`Close plasmid "${plasmids[index].name}"?`)) return;
+            
+            plasmids.splice(index, 1);
+            
+            if (plasmids.length === 0) {
+                currentPlasmidIndex = null;
+                selectedFeatureIndex = null;
+                document.getElementById('plasmidInfoSection').style.display = 'none';
+                document.getElementById('featuresSection').style.display = 'none';
+                document.getElementById('editSection').style.display = 'none';
+                document.getElementById('plasmidTabsSection').style.display = 'none';
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            } else {
+                if (currentPlasmidIndex >= plasmids.length) {
+                    currentPlasmidIndex = plasmids.length - 1;
+                }
+                selectedFeatureIndex = null;
+                document.getElementById('editSection').style.display = 'none';
+                initializeUI();
+            }
+        }
+
+        function updatePlasmidName() {
+            if (currentPlasmidIndex === null) return;
+            plasmids[currentPlasmidIndex].name = document.getElementById('plasmidName').value;
+            renderPlasmidTabs();
+            render();
+        }
+
+        function applyGlobalSettings() {
+            // Get global settings
+            const showScale = document.getElementById('globalShowScale').checked;
+            const showPositions = document.getElementById('globalShowPositions').checked;
+            const ringWidth = document.querySelector('input[name="globalRingWidth"]:checked').value;
+            const zoom = document.querySelector('input[name="globalZoom"]:checked').value;
+            
+            // Apply to current plasmid UI controls
+            document.getElementById('showScale').checked = showScale;
+            document.getElementById('showPositions').checked = showPositions;
+            document.querySelector(`input[name="ringWidth"][value="${ringWidth}"]`).checked = true;
+            document.querySelector(`input[name="zoom"][value="${zoom}"]`).checked = true;
+            
+            // Re-render current plasmid
+            render();
+        }
+
+        function syncGlobalSettings() {
+            // Sync global controls to match current plasmid settings
+            const showScale = document.getElementById('showScale').checked;
+            const showPositions = document.getElementById('showPositions').checked;
+            const ringWidth = document.querySelector('input[name="ringWidth"]:checked').value;
+            const zoom = document.querySelector('input[name="zoom"]:checked').value;
+            
+            document.getElementById('globalShowScale').checked = showScale;
+            document.getElementById('globalShowPositions').checked = showPositions;
+            document.querySelector(`input[name="globalRingWidth"][value="${ringWidth}"]`).checked = true;
+            document.querySelector(`input[name="globalZoom"][value="${zoom}"]`).checked = true;
+        }
+
+        function renderFeatureList() {
+            if (currentPlasmidIndex === null) return;
+            const plasmidData = plasmids[currentPlasmidIndex];
+            
+            const listDiv = document.getElementById('featureList');
+            listDiv.innerHTML = '';
+            
+            plasmidData.features.forEach((feature, index) => {
+                const div = document.createElement('div');
+                div.className = `feature-item ${feature.visible ? '' : 'hidden'} ${index === selectedFeatureIndex ? 'selected' : ''}`;
+                div.style.borderLeftColor = feature.fillColor;
+                div.innerHTML = `
+                    <div class="feature-header">
+                        <span class="feature-name" onclick="selectFeature(${index})">${feature.label || 'Unnamed'}</span>
+                        <div class="feature-controls">
+                            <span class="feature-type">${feature.type}</span>
+                            <input type="checkbox" ${feature.visible ? 'checked' : ''} onclick="toggleFeature(${index})" title="Toggle visibility">
+                            <button class="btn-icon btn-delete" onclick="deleteFeature(${index})" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="feature-position">${feature.start}-${feature.end} ${feature.reverse ? '(-)' : '(+)'}</div>
+                `;
+                listDiv.appendChild(div);
+            });
+        }
+
+        function toggleFeature(index) {
+            if (currentPlasmidIndex === null) return;
+            plasmids[currentPlasmidIndex].features[index].visible = !plasmids[currentPlasmidIndex].features[index].visible;
+            renderFeatureList();
+            render();
+        }
+
+        function deleteFeature(index) {
+            if (currentPlasmidIndex === null) return;
+            const plasmidData = plasmids[currentPlasmidIndex];
+            
+            if (confirm(`Delete "${plasmidData.features[index].label || 'Unnamed'}"?`)) {
+                plasmidData.features.splice(index, 1);
+                selectedFeatureIndex = null;
+                document.getElementById('editSection').style.display = 'none';
+                document.getElementById('plasmidStats').innerHTML = `
+                    <div><strong>Length:</strong> ${plasmidData.length.toLocaleString()} bp</div>
+                    <div><strong>Features:</strong> ${plasmidData.features.length}</div>
+                `;
+                renderPlasmidTabs();
+                renderFeatureList();
+                render();
+            }
+        }
+
+        function selectFeature(index) {
+            if (currentPlasmidIndex === null) return;
+            
+            selectedFeatureIndex = index;
+            const f = plasmids[currentPlasmidIndex].features[index];
+            
+            document.getElementById('featureLabel').value = f.label;
+            document.getElementById('featureFillColor').value = f.fillColor;
+            document.getElementById('featureFillHex').value = f.fillColor.toUpperCase();
+            document.getElementById('featureOutlineColor').value = f.outlineColor;
+            document.getElementById('featureOutlineHex').value = f.outlineColor.toUpperCase();
+            document.getElementById('featureType').value = f.type;
+            document.getElementById('featureStart').value = f.start;
+            document.getElementById('featureEnd').value = f.end;
+            document.getElementById('featureReverse').checked = f.reverse;
+            document.getElementById('featureShowLabel').checked = f.showLabel;
+            document.getElementById('featureShowArrow').checked = f.showArrow;
+            document.getElementById('featureFontBold').checked = f.fontBold;
+            
+            document.querySelector(`input[name="editLabelPos"][value="${f.labelPosition}"]`).checked = true;
+            document.querySelector(`input[name="editFontSize"][value="${f.fontSize}"]`).checked = true;
+            
+            document.getElementById('editSection').style.display = 'block';
+            renderFeatureList();
+            render();
+        }
+
+        function applyFeatureEdit() {
+            if (selectedFeatureIndex === null || currentPlasmidIndex === null) return;
+            
+            const f = plasmids[currentPlasmidIndex].features[selectedFeatureIndex];
+            f.label = document.getElementById('featureLabel').value;
+            f.fillColor = document.getElementById('featureFillColor').value;
+            f.outlineColor = document.getElementById('featureOutlineColor').value;
+            f.type = document.getElementById('featureType').value;
+            f.start = parseInt(document.getElementById('featureStart').value);
+            f.end = parseInt(document.getElementById('featureEnd').value);
+            f.reverse = document.getElementById('featureReverse').checked;
+            f.showLabel = document.getElementById('featureShowLabel').checked;
+            f.showArrow = document.getElementById('featureShowArrow').checked;
+            f.fontBold = document.getElementById('featureFontBold').checked;
+            f.labelPosition = document.querySelector('input[name="editLabelPos"]:checked').value;
+            f.fontSize = parseInt(document.querySelector('input[name="editFontSize"]:checked').value);
+            
+            renderFeatureList();
+            render();
+        }
+
+        function deleteSelectedFeature() {
+            if (selectedFeatureIndex !== null) {
+                deleteFeature(selectedFeatureIndex);
+            }
+        }
+
+        function copySettingsToOtherPlasmids() {
+            if (selectedFeatureIndex === null || currentPlasmidIndex === null) return;
+            
+            const currentFeature = plasmids[currentPlasmidIndex].features[selectedFeatureIndex];
+            const currentLabel = currentFeature.label.toLowerCase().trim();
+            
+            if (!currentLabel) {
+                alert('Current feature must have a label to copy settings');
+                return;
+            }
+            
+            let matchCount = 0;
+            let plasmidsAffected = [];
+            
+            // Look through all other plasmids
+            plasmids.forEach((plasmid, pIndex) => {
+                if (pIndex === currentPlasmidIndex) return; // Skip current plasmid
+                
+                let foundInThisPlasmid = false;
+                
+                // Find matching features by label
+                plasmid.features.forEach((feature, fIndex) => {
+                    const featureLabel = feature.label.toLowerCase().trim();
+                    
+                    if (featureLabel === currentLabel) {
+                        // Copy all styling settings (but not position/type)
+                        feature.fillColor = currentFeature.fillColor;
+                        feature.outlineColor = currentFeature.outlineColor;
+                        feature.showLabel = currentFeature.showLabel;
+                        feature.showArrow = currentFeature.showArrow;
+                        feature.labelPosition = currentFeature.labelPosition;
+                        feature.fontSize = currentFeature.fontSize;
+                        feature.fontBold = currentFeature.fontBold;
+                        
+                        matchCount++;
+                        if (!foundInThisPlasmid) {
+                            plasmidsAffected.push(plasmid.name);
+                            foundInThisPlasmid = true;
+                        }
+                    }
+                });
+            });
+            
+            if (matchCount === 0) {
+                alert(`No matching features found with label "${currentFeature.label}" in other plasmids.`);
+            } else {
+                const plasmidList = plasmidsAffected.join(', ');
+                alert(`✅ Copied settings to ${matchCount} feature(s) in ${plasmidsAffected.length} plasmid(s):\n\n${plasmidList}\n\nMatched by label: "${currentFeature.label}"`);
+                
+                // Update tabs to show changes were made
+                renderPlasmidTabs();
+            }
+        }
+
+        function copyAllSettingsToOtherPlasmids() {
+            if (currentPlasmidIndex === null) return;
+            
+            const currentPlasmid = plasmids[currentPlasmidIndex];
+            
+            if (currentPlasmid.features.length === 0) {
+                alert('Current plasmid has no features to copy');
+                return;
+            }
+            
+            const otherPlasmids = plasmids.filter((p, i) => i !== currentPlasmidIndex);
+            
+            if (otherPlasmids.length === 0) {
+                alert('No other plasmids loaded. Load multiple plasmids to use this feature.');
+                return;
+            }
+            
+            if (!confirm(`Copy styling settings from all ${currentPlasmid.features.length} features in "${currentPlasmid.name}" to matching features in ${otherPlasmids.length} other plasmid(s)?\n\nMatching is done by feature label (case-insensitive).`)) {
+                return;
+            }
+            
+            let totalMatches = 0;
+            let matchesByPlasmid = {};
+            
+            // For each feature in current plasmid
+            currentPlasmid.features.forEach(currentFeature => {
+                const currentLabel = currentFeature.label.toLowerCase().trim();
+                if (!currentLabel) return; // Skip features without labels
+                
+                // Look in all other plasmids
+                plasmids.forEach((plasmid, pIndex) => {
+                    if (pIndex === currentPlasmidIndex) return;
+                    
+                    // Find matching features
+                    plasmid.features.forEach(feature => {
+                        const featureLabel = feature.label.toLowerCase().trim();
+                        
+                        if (featureLabel === currentLabel) {
+                            // Copy styling settings
+                            feature.fillColor = currentFeature.fillColor;
+                            feature.outlineColor = currentFeature.outlineColor;
+                            feature.showLabel = currentFeature.showLabel;
+                            feature.showArrow = currentFeature.showArrow;
+                            feature.labelPosition = currentFeature.labelPosition;
+                            feature.fontSize = currentFeature.fontSize;
+                            feature.fontBold = currentFeature.fontBold;
+                            
+                            totalMatches++;
+                            
+                            if (!matchesByPlasmid[plasmid.name]) {
+                                matchesByPlasmid[plasmid.name] = 0;
+                            }
+                            matchesByPlasmid[plasmid.name]++;
+                        }
+                    });
+                });
+            });
+            
+            if (totalMatches === 0) {
+                alert('No matching features found in other plasmids.\n\nMake sure features have matching labels (case-insensitive).');
+            } else {
+                let summary = `✅ Successfully copied settings to ${totalMatches} feature(s):\n\n`;
+                for (let plasmidName in matchesByPlasmid) {
+                    summary += `• ${plasmidName}: ${matchesByPlasmid[plasmidName]} feature(s)\n`;
+                }
+                alert(summary);
+                
+                renderPlasmidTabs();
+            }
+        }
+
+        // Modal functions
+        function openAddFeatureModal() {
+            if (currentPlasmidIndex === null) {
+                alert('Please load a plasmid first');
+                return;
+            }
+            
+            document.getElementById('newLabel').value = '';
+            document.getElementById('newType').value = 'cds';
+            document.getElementById('newStart').value = '';
+            document.getElementById('newEnd').value = '';
+            updateNewFeatureColors();
+            document.getElementById('newReverse').checked = false;
+            document.getElementById('addFeatureModal').classList.add('active');
+        }
+
+        function closeAddFeatureModal() {
+            document.getElementById('addFeatureModal').classList.remove('active');
+        }
+
+        function updateNewFeatureColors() {
+            const type = document.getElementById('newType').value;
+            const colors = TYPE_COLORS[type] || TYPE_COLORS.misc;
+            document.getElementById('newFillColor').value = colors.fill;
+            document.getElementById('newFillHex').value = colors.fill.toUpperCase();
+            document.getElementById('newOutlineColor').value = colors.fill; // Same as fill
+            document.getElementById('newOutlineHex').value = colors.fill.toUpperCase(); // Same as fill
+        }
+
+        function addNewFeature() {
+            if (currentPlasmidIndex === null) return;
+            
+            const plasmidData = plasmids[currentPlasmidIndex];
+            const label = document.getElementById('newLabel').value.trim();
+            const type = document.getElementById('newType').value;
+            const start = parseInt(document.getElementById('newStart').value);
+            const end = parseInt(document.getElementById('newEnd').value);
+            const fillColor = document.getElementById('newFillColor').value;
+            const outlineColor = document.getElementById('newOutlineColor').value;
+            const reverse = document.getElementById('newReverse').checked;
+
+            if (!label || !start || !end) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            if (start < 1 || end < 1 || start > plasmidData.length || end > plasmidData.length) {
+                alert(`Positions must be between 1 and ${plasmidData.length}`);
+                return;
+            }
+
+            plasmidData.features.push({
+                type, start, end, reverse, label,
+                fillColor, outlineColor,
+                showLabel: true,
+                showArrow: true,
+                labelPosition: 'outside',
+                fontSize: 12,
+                fontBold: true,
+                visible: true
+            });
+
+            closeAddFeatureModal();
+            document.getElementById('plasmidStats').innerHTML = `
+                <div><strong>Length:</strong> ${plasmidData.length.toLocaleString()} bp</div>
+                <div><strong>Features:</strong> ${plasmidData.features.length}</div>
+            `;
+            renderPlasmidTabs();
+            renderFeatureList();
+            render();
+        }
+
+        // Color sync
+        ['newFillColor', 'newOutlineColor', 'featureFillColor', 'featureOutlineColor'].forEach(id => {
+            const colorInput = document.getElementById(id);
+            const hexInput = document.getElementById(id.replace('Color', 'Hex'));
+            
+            if (colorInput && hexInput) {
+                colorInput.addEventListener('input', () => {
+                    hexInput.value = colorInput.value.toUpperCase();
+                });
+                
+                hexInput.addEventListener('change', () => {
+                    let hex = hexInput.value.trim();
+                    if (!hex.startsWith('#')) hex = '#' + hex;
+                    if (/^#[0-9A-F]{6}$/i.test(hex)) {
+                        colorInput.value = hex;
+                        hexInput.value = hex.toUpperCase();
+                    }
+                });
+            }
+        });
+
+        // Rendering
+        function render() {
+            if (currentPlasmidIndex === null || !plasmids[currentPlasmidIndex]) return;
+            
+            const plasmidData = plasmids[currentPlasmidIndex];
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const zoom = parseFloat(document.querySelector('input[name="zoom"]:checked').value);
+            const baseRadius = 200 * zoom;
+            const ringWidth = parseInt(document.querySelector('input[name="ringWidth"]:checked').value);
+            
+            // Backbone
+            ctx.strokeStyle = '#cbd5e0';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, baseRadius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Scale markers
+            if (document.getElementById('showScale').checked) {
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 12; i++) {
+                    const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+                    const r1 = baseRadius - 5;
+                    const r2 = baseRadius + 5;
+                    ctx.beginPath();
+                    ctx.moveTo(centerX + Math.cos(angle) * r1, centerY + Math.sin(angle) * r1);
+                    ctx.lineTo(centerX + Math.cos(angle) * r2, centerY + Math.sin(angle) * r2);
+                    ctx.stroke();
+                }
+            }
+
+            // Features - draw as complete shapes with integrated arrows
+            plasmidData.features.forEach((feature, idx) => {
+                if (!feature.visible) return;
+
+                const startAngle = (feature.start / plasmidData.length) * Math.PI * 2 - Math.PI / 2;
+                const endAngle = (feature.end / plasmidData.length) * Math.PI * 2 - Math.PI / 2;
+                
+                const innerRadius = baseRadius - ringWidth / 2;
+                const outerRadius = baseRadius + ringWidth / 2;
+                
+                // Calculate arrow size based on feature length
+                const featureSpan = Math.abs(endAngle - startAngle);
+                const arrowAngle = Math.min(0.08, featureSpan * 0.3); // Arrow takes max 30% of feature
+                
+                // Determine body and arrow regions
+                let bodyStartAngle, bodyEndAngle, arrowTipAngle, arrowBaseAngle;
+                
+                if (feature.showArrow) {
+                    if (feature.reverse) {
+                        // Arrow at start (going backwards)
+                        arrowTipAngle = startAngle;
+                        arrowBaseAngle = startAngle + arrowAngle;
+                        bodyStartAngle = arrowBaseAngle;
+                        bodyEndAngle = endAngle;
+                    } else {
+                        // Arrow at end (going forwards)
+                        arrowTipAngle = endAngle;
+                        arrowBaseAngle = endAngle - arrowAngle;
+                        bodyStartAngle = startAngle;
+                        bodyEndAngle = arrowBaseAngle;
+                    }
+                } else {
+                    // No arrow, just rectangle
+                    bodyStartAngle = startAngle;
+                    bodyEndAngle = endAngle;
+                }
+
+                // Draw highlight if selected
+                if (idx === selectedFeatureIndex) {
+                    ctx.save();
+                    ctx.strokeStyle = '#fbbf24';
+                    ctx.lineWidth = 4;
+                    ctx.shadowColor = 'rgba(251, 191, 36, 0.5)';
+                    ctx.shadowBlur = 10;
+                    
+                    if (feature.showArrow) {
+                        drawFeatureWithArrow(centerX, centerY, innerRadius, outerRadius, 
+                            bodyStartAngle, bodyEndAngle, arrowTipAngle, arrowBaseAngle, feature.reverse);
+                    } else {
+                        drawFeatureRect(centerX, centerY, innerRadius, outerRadius, bodyStartAngle, bodyEndAngle);
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Draw filled feature
+                ctx.fillStyle = feature.fillColor;
+                ctx.beginPath();
+                
+                if (feature.showArrow) {
+                    drawFeatureWithArrow(centerX, centerY, innerRadius, outerRadius, 
+                        bodyStartAngle, bodyEndAngle, arrowTipAngle, arrowBaseAngle, feature.reverse);
+                } else {
+                    drawFeatureRect(centerX, centerY, innerRadius, outerRadius, bodyStartAngle, bodyEndAngle);
+                }
+                
+                ctx.fill();
+
+                // Draw outline
+                ctx.strokeStyle = feature.outlineColor;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                
+                if (feature.showArrow) {
+                    drawFeatureWithArrow(centerX, centerY, innerRadius, outerRadius, 
+                        bodyStartAngle, bodyEndAngle, arrowTipAngle, arrowBaseAngle, feature.reverse);
+                } else {
+                    drawFeatureRect(centerX, centerY, innerRadius, outerRadius, bodyStartAngle, bodyEndAngle);
+                }
+                
+                ctx.stroke();
+
+                // Label
+                if (feature.showLabel && feature.label) {
+                    const midAngle = (startAngle + endAngle) / 2;
+                    const labelDist = feature.labelPosition === 'inside' 
+                        ? (baseRadius - ringWidth/2 - 20) 
+                        : (baseRadius + ringWidth/2 + 35);
+                    
+                    const labelX = centerX + Math.cos(midAngle) * labelDist;
+                    const labelY = centerY + Math.sin(midAngle) * labelDist;
+                    
+                    ctx.fillStyle = '#1f2937';
+                    const weight = feature.fontBold ? 'bold' : 'normal';
+                    ctx.font = `${weight} ${feature.fontSize}px Helvetica, Arial, sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(feature.label, labelX, labelY);
+
+                    if (document.getElementById('showPositions').checked) {
+                        ctx.font = 'normal 10px Helvetica, Arial, sans-serif';
+                        ctx.fillStyle = '#6b7280';
+                        ctx.fillText(`${feature.start}-${feature.end}`, labelX, labelY + feature.fontSize + 5);
+                    }
+                }
+            });
+
+            // Center text
+            ctx.fillStyle = '#1f2937';
+            ctx.font = 'bold 18px Helvetica, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(plasmidData.name, centerX, centerY - 10);
+            
+            ctx.font = '14px Helvetica, Arial, sans-serif';
+            ctx.fillStyle = '#6b7280';
+            ctx.fillText(`${plasmidData.length.toLocaleString()} bp`, centerX, centerY + 15);
+        }
+
+        // Draw feature as rectangular arc (no arrow)
+        function drawFeatureRect(cx, cy, innerR, outerR, startAngle, endAngle) {
+            // Outer arc
+            ctx.arc(cx, cy, outerR, startAngle, endAngle);
+            // Right edge
+            ctx.lineTo(
+                cx + Math.cos(endAngle) * innerR,
+                cy + Math.sin(endAngle) * innerR
+            );
+            // Inner arc (reverse direction)
+            ctx.arc(cx, cy, innerR, endAngle, startAngle, true);
+            // Left edge
+            ctx.closePath();
+        }
+
+        // Draw feature with integrated arrow head
+        function drawFeatureWithArrow(cx, cy, innerR, outerR, bodyStart, bodyEnd, arrowTip, arrowBase, reverse) {
+            if (reverse) {
+                // Arrow at start, pointing backwards
+                // Start at arrow tip
+                ctx.moveTo(
+                    cx + Math.cos(arrowTip) * (innerR + outerR) / 2,
+                    cy + Math.sin(arrowTip) * (innerR + outerR) / 2
+                );
+                
+                // Arrow inner edge to body
+                ctx.lineTo(
+                    cx + Math.cos(arrowBase) * innerR,
+                    cy + Math.sin(arrowBase) * innerR
+                );
+                
+                // Body inner arc
+                ctx.arc(cx, cy, innerR, arrowBase, bodyEnd);
+                
+                // Body right edge
+                ctx.lineTo(
+                    cx + Math.cos(bodyEnd) * outerR,
+                    cy + Math.sin(bodyEnd) * outerR
+                );
+                
+                // Body outer arc (reverse)
+                ctx.arc(cx, cy, outerR, bodyEnd, arrowBase, true);
+                
+                // Arrow outer edge back to tip
+                ctx.lineTo(
+                    cx + Math.cos(arrowTip) * (innerR + outerR) / 2,
+                    cy + Math.sin(arrowTip) * (innerR + outerR) / 2
+                );
+            } else {
+                // Arrow at end, pointing forwards
+                // Start at body start, outer radius
+                ctx.moveTo(
+                    cx + Math.cos(bodyStart) * outerR,
+                    cy + Math.sin(bodyStart) * outerR
+                );
+                
+                // Body outer arc to arrow base
+                ctx.arc(cx, cy, outerR, bodyStart, arrowBase);
+                
+                // Arrow outer edge to tip
+                ctx.lineTo(
+                    cx + Math.cos(arrowTip) * (innerR + outerR) / 2,
+                    cy + Math.sin(arrowTip) * (innerR + outerR) / 2
+                );
+                
+                // Arrow inner edge from tip
+                ctx.lineTo(
+                    cx + Math.cos(arrowBase) * innerR,
+                    cy + Math.sin(arrowBase) * innerR
+                );
+                
+                // Body inner arc (reverse)
+                ctx.arc(cx, cy, innerR, arrowBase, bodyStart, true);
+                
+                // Close back to start
+                ctx.closePath();
+            }
+        }
+
+        function exportPNG() {
+            if (currentPlasmidIndex === null) return;
+            const plasmidData = plasmids[currentPlasmidIndex];
+            
+            const link = document.createElement('a');
+            link.download = `${plasmidData.name}_map.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function exportSVG() {
+            if (currentPlasmidIndex === null || !plasmids[currentPlasmidIndex]) return;
+            
+            const plasmidData = plasmids[currentPlasmidIndex];
+
+            const centerX = 350;
+            const centerY = 350;
+            const zoom = parseFloat(document.querySelector('input[name="zoom"]:checked').value);
+            const baseRadius = 200 * zoom;
+            const ringWidth = parseInt(document.querySelector('input[name="ringWidth"]:checked').value);
+            
+            let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="700" height="700" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      text { font-family: Helvetica, Arial, sans-serif; }
+    </style>
+  </defs>
+  <rect width="700" height="700" fill="white"/>
+  
+  <!-- Backbone -->
+  <circle cx="${centerX}" cy="${centerY}" r="${baseRadius}" fill="none" stroke="#cbd5e0" stroke-width="4"/>
+`;
+
+            // Scale markers
+            if (document.getElementById('showScale').checked) {
+                for (let i = 0; i < 12; i++) {
+                    const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+                    const r1 = baseRadius - 5;
+                    const r2 = baseRadius + 5;
+                    const x1 = centerX + Math.cos(angle) * r1;
+                    const y1 = centerY + Math.sin(angle) * r1;
+                    const x2 = centerX + Math.cos(angle) * r2;
+                    const y2 = centerY + Math.sin(angle) * r2;
+                    svgContent += `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#94a3b8" stroke-width="1"/>\n`;
+                }
+            }
+
+            // Features
+            plasmidData.features.forEach((feature, idx) => {
+                if (!feature.visible) return;
+
+                const startAngle = (feature.start / plasmidData.length) * Math.PI * 2 - Math.PI / 2;
+                const endAngle = (feature.end / plasmidData.length) * Math.PI * 2 - Math.PI / 2;
+                
+                const innerRadius = baseRadius - ringWidth / 2;
+                const outerRadius = baseRadius + ringWidth / 2;
+                
+                const featureSpan = Math.abs(endAngle - startAngle);
+                const arrowAngle = Math.min(0.08, featureSpan * 0.3);
+                
+                let bodyStartAngle, bodyEndAngle, arrowTipAngle, arrowBaseAngle;
+                
+                if (feature.showArrow) {
+                    if (feature.reverse) {
+                        arrowTipAngle = startAngle;
+                        arrowBaseAngle = startAngle + arrowAngle;
+                        bodyStartAngle = arrowBaseAngle;
+                        bodyEndAngle = endAngle;
+                    } else {
+                        arrowTipAngle = endAngle;
+                        arrowBaseAngle = endAngle - arrowAngle;
+                        bodyStartAngle = startAngle;
+                        bodyEndAngle = arrowBaseAngle;
+                    }
+                } else {
+                    bodyStartAngle = startAngle;
+                    bodyEndAngle = endAngle;
+                }
+
+                // Generate SVG path
+                let pathData = '';
+                
+                if (feature.showArrow) {
+                    pathData = generateSVGPathWithArrow(centerX, centerY, innerRadius, outerRadius,
+                        bodyStartAngle, bodyEndAngle, arrowTipAngle, arrowBaseAngle, feature.reverse);
+                } else {
+                    pathData = generateSVGPathRect(centerX, centerY, innerRadius, outerRadius, 
+                        bodyStartAngle, bodyEndAngle);
+                }
+
+                // Highlight if selected
+                if (idx === selectedFeatureIndex) {
+                    svgContent += `  <path d="${pathData}" fill="none" stroke="#fbbf24" stroke-width="4" opacity="0.7"/>\n`;
+                }
+
+                // Feature fill and outline
+                svgContent += `  <path d="${pathData}" fill="${feature.fillColor}" stroke="${feature.outlineColor}" stroke-width="2.5"/>\n`;
+
+                // Label
+                if (feature.showLabel && feature.label) {
+                    const midAngle = (startAngle + endAngle) / 2;
+                    const labelDist = feature.labelPosition === 'inside' 
+                        ? (baseRadius - ringWidth/2 - 20) 
+                        : (baseRadius + ringWidth/2 + 35);
+                    
+                    const labelX = centerX + Math.cos(midAngle) * labelDist;
+                    const labelY = centerY + Math.sin(midAngle) * labelDist;
+                    
+                    const weight = feature.fontBold ? 'bold' : 'normal';
+                    svgContent += `  <text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" font-size="${feature.fontSize}" font-weight="${weight}" fill="#1f2937">${escapeXML(feature.label)}</text>\n`;
+
+                    if (document.getElementById('showPositions').checked) {
+                        svgContent += `  <text x="${labelX}" y="${labelY + feature.fontSize + 5}" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="#6b7280">${feature.start}-${feature.end}</text>\n`;
+                    }
+                }
+            });
+
+            // Center text
+            svgContent += `  <text x="${centerX}" y="${centerY - 10}" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="bold" fill="#1f2937">${escapeXML(plasmidData.name)}</text>\n`;
+            svgContent += `  <text x="${centerX}" y="${centerY + 15}" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="#6b7280">${plasmidData.length.toLocaleString()} bp</text>\n`;
+            
+            svgContent += `</svg>`;
+
+            // Download SVG
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `${plasmidData.name}_map.svg`;
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function generateSVGPathRect(cx, cy, innerR, outerR, startAngle, endAngle) {
+            const x1 = cx + Math.cos(startAngle) * outerR;
+            const y1 = cy + Math.sin(startAngle) * outerR;
+            const x2 = cx + Math.cos(endAngle) * outerR;
+            const y2 = cy + Math.sin(endAngle) * outerR;
+            const x3 = cx + Math.cos(endAngle) * innerR;
+            const y3 = cy + Math.sin(endAngle) * innerR;
+            const x4 = cx + Math.cos(startAngle) * innerR;
+            const y4 = cy + Math.sin(startAngle) * innerR;
+
+            const largeArc = (endAngle - startAngle) > Math.PI ? 1 : 0;
+
+            return `M ${x1} ${y1} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerR} ${innerR} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+        }
+
+        function generateSVGPathWithArrow(cx, cy, innerR, outerR, bodyStart, bodyEnd, arrowTip, arrowBase, reverse) {
+            const midR = (innerR + outerR) / 2;
+            
+            if (reverse) {
+                // Arrow at start
+                const tipX = cx + Math.cos(arrowTip) * midR;
+                const tipY = cy + Math.sin(arrowTip) * midR;
+                const baseInnerX = cx + Math.cos(arrowBase) * innerR;
+                const baseInnerY = cy + Math.sin(arrowBase) * innerR;
+                const bodyEndInnerX = cx + Math.cos(bodyEnd) * innerR;
+                const bodyEndInnerY = cy + Math.sin(bodyEnd) * innerR;
+                const bodyEndOuterX = cx + Math.cos(bodyEnd) * outerR;
+                const bodyEndOuterY = cy + Math.sin(bodyEnd) * outerR;
+                const baseOuterX = cx + Math.cos(arrowBase) * outerR;
+                const baseOuterY = cy + Math.sin(arrowBase) * outerR;
+
+                const innerLargeArc = (bodyEnd - arrowBase) > Math.PI ? 1 : 0;
+                const outerLargeArc = (bodyEnd - arrowBase) > Math.PI ? 1 : 0;
+
+                return `M ${tipX} ${tipY} L ${baseInnerX} ${baseInnerY} A ${innerR} ${innerR} 0 ${innerLargeArc} 1 ${bodyEndInnerX} ${bodyEndInnerY} L ${bodyEndOuterX} ${bodyEndOuterY} A ${outerR} ${outerR} 0 ${outerLargeArc} 0 ${baseOuterX} ${baseOuterY} Z`;
+            } else {
+                // Arrow at end
+                const bodyStartOuterX = cx + Math.cos(bodyStart) * outerR;
+                const bodyStartOuterY = cy + Math.sin(bodyStart) * outerR;
+                const baseOuterX = cx + Math.cos(arrowBase) * outerR;
+                const baseOuterY = cy + Math.sin(arrowBase) * outerR;
+                const tipX = cx + Math.cos(arrowTip) * midR;
+                const tipY = cy + Math.sin(arrowTip) * midR;
+                const baseInnerX = cx + Math.cos(arrowBase) * innerR;
+                const baseInnerY = cy + Math.sin(arrowBase) * innerR;
+                const bodyStartInnerX = cx + Math.cos(bodyStart) * innerR;
+                const bodyStartInnerY = cy + Math.sin(bodyStart) * innerR;
+
+                const outerLargeArc = (arrowBase - bodyStart) > Math.PI ? 1 : 0;
+                const innerLargeArc = (arrowBase - bodyStart) > Math.PI ? 1 : 0;
+
+                return `M ${bodyStartOuterX} ${bodyStartOuterY} A ${outerR} ${outerR} 0 ${outerLargeArc} 1 ${baseOuterX} ${baseOuterY} L ${tipX} ${tipY} L ${baseInnerX} ${baseInnerY} A ${innerR} ${innerR} 0 ${innerLargeArc} 0 ${bodyStartInnerX} ${bodyStartInnerY} Z`;
+            }
+        }
+
+        function escapeXML(str) {
+            return str.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;')
+                      .replace(/'/g, '&apos;');
+        }
+    </script>
+</body>
+</html>
